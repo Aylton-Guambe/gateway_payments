@@ -20,7 +20,19 @@ export class PaymentsService {
       throw new Error("Wallet ID n?o configurado (E2P_WALLET_ID).");
     }
 
-    const reference = String(orderId).replace(/\s+/g, "");
+    // Refer?ncia "limpa" para evitar erro INS-19:
+    // - s? letras/n?meros
+    // - no m?ximo 12 caracteres
+    let referenceBase = String(orderId)
+      .replace(/[^a-zA-Z0-9]/g, "")   // tira tudo que n?o for letra/d?gito
+      .toUpperCase()
+      .slice(0, 12);
+
+    if (!referenceBase) {
+      referenceBase = "ORD" + Date.now().toString().slice(-9);
+    }
+
+    const reference = referenceBase;
 
     const providerResp = await this.e2p.c2b(chosenWallet, {
       amount: String(amount),
